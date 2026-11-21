@@ -1,0 +1,202 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ stats.country }}{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+<!-- Create a 2 by 2 grid to display the charts -->
+<!-- added 'if stats else 0' for edge case where stats doesn't exist-->
+
+{% import "macros/charts.html" as charts %}
+
+<div class="row g-2">
+
+  {{ charts.daily_chart(
+    "Daily Cases",
+    "dailyCasesChart",
+    "toggleDailyCases"
+  ) }}
+
+  {{ charts.cumulative_chart(
+    "Cumulative Cases",
+    "cumulativeCasesChart",
+    "Total Cases",
+    stats.total_cases if stats else 0
+  ) }}
+
+  {{ charts.daily_chart(
+    "Daily Deaths",
+    "dailyDeathsChart",
+    "toggleDailyDeaths"
+  ) }}
+
+  {{ charts.cumulative_chart(
+    "Cumulative Deaths",
+    "cumulativeDeathsChart",
+    "Total Deaths",
+    stats.total_deaths if stats else 0
+  ) }}
+
+</div>
+
+<!-- Chart Data: Flask generates the data -> Jinja renders it as JSON with tojson ->
+JavaScript reads and parses it to populate the charts.-->
+
+<script id="chart-data" type="application/json">
+{
+  "daily_cases": {{ daily_cases | map(attribute='new_cases') | list | tojson }},
+  "daily_cases_labels": {{ daily_cases | map(attribute='date') | list | tojson }},
+
+  "daily_deaths": {{ daily_deaths | map(attribute='new_deaths') | list | tojson }},
+  "daily_deaths_labels": {{ daily_deaths | map(attribute='date') | list | tojson }},
+
+  "cumulative_cases": {{ cum_cases | map(attribute='cum_cases') | list | tojson }},
+  "cumulative_cases_labels": {{ cum_cases | map(attribute='date') | list | tojson }},
+
+  "cumulative_deaths": {{ cum_deaths | map(attribute='cum_deaths') | list | tojson }},
+  "cumulative_deaths_labels": {{ cum_deaths | map(attribute='date') | list | tojson }}
+}
+</script>
+
+<script>
+const chartData = JSON.parse(document.getElementById("chart-data").textContent);
+
+// Function to create a line chart
+function createLineChart(canvasId, labels, data, label, borderColor, showLineByDefault) {
+    const ctx = document.getElementById(canvasId).getContext("2d");
+    return new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: label,
+                data: data,
+                borderColor: borderColor,
+                showLine: showLineByDefault, // function call specifies line on / off
+                // tried various tension settings to get a suitable line graph
+                tension: 0.25,
+                pointRadius: showLineByDefault ? 0 : 2, // default: show data points (toggle-able)
+                spanGaps: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'nearest',
+                intersect: true
+            },
+            elements: {
+                point: {
+                // hitRadius so that tooltips are less fussy about being exactly over the data point
+                hitRadius: 6
+                }
+            },
+            plugins: {
+                legend: { display: false },
+
+                tooltip: {
+                    // add a specific tool tip to explain data corrections - unexpected negative values
+                    callbacks: {
+                        afterLabel: function(context) {
+                        const value = context.raw;
+                        if (value < 0) {
+                            return "⚠️ Negative values reflect data corrections";
+                        }
+                        return null;
+                        }
+                    },
+                    // added to make the tool tip visibility crisper as there are so many data points
+                    animation: {
+                        duration: 0
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    type: "time",
+                    time: {
+                        unit: "month",
+                        displayFormats: { month: "MMM yyyy" },
+                        tooltipFormat: "dd MMM yyyy"
+                    },
+                    // hard coded max date to display data for core pandemic period
+                    max: "2023-02-28"
+                },
+                y: {
+                    title: { display: true, text: label }
+                }
+            }
+        }
+    });
+}
+
+//Chart creation
+const dailyCasesChart = createLineChart(
+    "dailyCasesChart",
+    chartData.daily_cases_labels,
+    chartData.daily_cases,
+    "Daily Cases",
+    "rgb(75,192,192)",
+    false
+);
+
+const cumulativeCasesChart = createLineChart(
+    "cumulativeCasesChart",
+    chartData.cumulative_cases_labels,
+    chartData.cumulative_cases,
+    "Cumulative Cases",
+    "rgb(54,162,235)",
+    true
+);
+
+const dailyDeathsChart = createLineChart(
+    "dailyDeathsChart",
+    chartData.daily_deaths_labels,
+    chartData.daily_deaths,
+    "Daily Deaths",
+    "rgb(255,99,132)",
+    false
+);
+
+const cumulativeDeathsChart = createLineChart(
+    "cumulativeDeathsChart",
+    chartData.cumulative_deaths_labels,
+    chartData.cumulative_deaths,
+    "Cumulative Deaths",
+    "rgb(153,102,255)",
+    true
+);
+
+// Toggle trend line on/off for daily cases / deaths charts, individually
+
+function bindTrendToggle(toggleId, chart) {
+    document.getElementById(toggleId).addEventListener("change", function () {
+    const dataset = chart.data.datasets[0];
+
+    if (this.checked) {
+        dataset.showLine = true;
+        dataset.pointRadius = 0;
+    } else {
+        dataset.showLine = false;
+        dataset.pointRadius = 2;
+    }
+    chart.update();
+  });
+}
+
+// for each of the daily charts, bind the toggle switch to the data
+bindTrendToggle("toggleDailyCases", dailyCasesChart);
+bindTrendToggle("toggleDailyDeaths", dailyDeathsChart);
+
+</script>
+<script>
+    // Script to display the tooltip to highlight that the total is til Jan 2026
+    const totalTooltipList = [].slice.call(document.querySelectorAll('.total-value'))
+    totalTooltipList.forEach(function(el) {
+        new bootstrap.Tooltip(el)
+    })
+</script>
+{% endblock %}

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Interactive Healthcare Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body { font-family: Arial, sans-serif; padding: 20px; }
+  canvas { margin: 20px 0; max-width: 900px; }
+  label { font-weight: bold; }
+</style>
+</head>
+<body>
+
+<h1>Interactive Healthcare Dashboard</h1>
+
+<label for="stateSelect">Select State:</label>
+<select id="stateSelect"></select>
+
+<h2>Daily Confirmed Cases</h2>
+<canvas id="casesChart"></canvas>
+
+<h2>Daily Deaths</h2>
+<canvas id="deathsChart"></canvas>
+
+<h2>Hospitalized Patients</h2>
+<canvas id="hospitalizedChart"></canvas>
+
+<script>
+  // Embedded sample data
+  const dashboardData = {
+    "NY": {
+      dates: ["2025-01-01","2025-01-02","2025-01-03","2025-01-04"],
+      positive: [5000, 5200, 5400, 5600],
+      death: [50, 55, 60, 62],
+      hospitalized: [300, 310, 320, 330]
+    },
+    "CA": {
+      dates: ["2025-01-01","2025-01-02","2025-01-03","2025-01-04"],
+      positive: [7000, 7300, 7500, 7700],
+      death: [60, 65, 70, 72],
+      hospitalized: [500, 510, 520, 530]
+    },
+    "TX": {
+      dates: ["2025-01-01","2025-01-02","2025-01-03","2025-01-04"],
+      positive: [6000, 6200, 6400, 6600],
+      death: [40, 45, 50, 52],
+      hospitalized: [400, 410, 420, 430]
+    }
+  };
+
+  let casesChart, deathsChart, hospitalizedChart;
+
+  // Populate dropdown
+  const stateSelect = document.getElementById('stateSelect');
+  Object.keys(dashboardData).forEach(state => {
+    const option = document.createElement('option');
+    option.value = state;
+    option.textContent = state;
+    stateSelect.appendChild(option);
+  });
+
+  // Initialize charts with first state
+  const firstState = Object.keys(dashboardData)[0];
+  updateCharts(firstState);
+
+  // Update charts when dropdown changes
+  stateSelect.addEventListener('change', e => updateCharts(e.target.value));
+
+  function updateCharts(state) {
+    const stateData = dashboardData[state];
+
+    const ctxCases = document.getElementById('casesChart').getContext('2d');
+    const ctxDeaths = document.getElementById('deathsChart').getContext('2d');
+    const ctxHospital = document.getElementById('hospitalizedChart').getContext('2d');
+
+    // Destroy previous charts
+    if (casesChart) casesChart.destroy();
+    if (deathsChart) deathsChart.destroy();
+    if (hospitalizedChart) hospitalizedChart.destroy();
+
+    // Line chart - Cases
+    casesChart = new Chart(ctxCases, {
+      type: 'line',
+      data: {
+        labels: stateData.dates,
+        datasets: [{
+          label: 'Confirmed Cases',
+          data: stateData.positive,
+          borderColor: 'rgba(75,192,192,1)',
+          backgroundColor: 'rgba(75,192,192,0.2)',
+          tension: 0.3
+        }]
+      },
+      options: { responsive: true }
+    });
+
+    // Bar chart - Deaths
+    deathsChart = new Chart(ctxDeaths, {
+      type: 'bar',
+      data: {
+        labels: stateData.dates,
+        datasets: [{
+          label: 'Deaths',
+          data: stateData.death,
+          backgroundColor: 'rgba(255,99,132,0.5)',
+          borderColor: 'rgba(255,99,132,1)',
+          borderWidth: 1
+        }]
+      },
+      options: { responsive: true }
+    });
+
+    // Pie chart - Hospitalized (latest day)
+    const latestHospitalized = stateData.hospitalized[stateData.hospitalized.length-1];
+    hospitalizedChart = new Chart(ctxHospital, {
+      type: 'pie',
+      data: {
+        labels: ['Hospitalized', 'Remaining Capacity'],
+        datasets: [{
+          label: 'Hospitalized Patients',
+          data: [latestHospitalized, 1000 - latestHospitalized], // example capacity
+          backgroundColor: ['rgba(54,162,235,0.7)', 'rgba(201,203,207,0.3)']
+        }]
+      },
+      options: { responsive: true }
+    });
+  }
+</script>
+</body>
+</html>

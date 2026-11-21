@@ -1,0 +1,46 @@
+/* grey colour scheme */
+body {
+    background-color: #F5F5F5;
+    padding-bottom: 40px;
+}
+
+.nav-link {
+    color: grey;
+}
+
+.btn {
+    background-color: #36454F;
+    border-color: #36454F;
+}
+
+
+/* Remainder of CSS is to specify suitable formatting for mobile and desktop viewing */
+
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 25vh;   /* Mobile default */
+  min-height: 220px;
+}
+
+/* Desktop screens - fit four charts without scrolling */
+/* pin footer to bottom on desktop, again to avoid scrolling */
+/* only want body padding on desktop as on mobile it makes the charts too narrow */
+@media (min-width: 768px) {
+  .chart-container {
+    height: 22vh;
+  }
+  footer {
+    position: fixed;
+    bottom: 20px;
+  }
+  body {
+  padding: 30px;
+  padding-bottom: 0;
+  }
+}
+
+.chart-container canvas {
+  width: 100%;
+  height: 100%;
+}

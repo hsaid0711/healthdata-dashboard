@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthcare Data Chart Example</title>
+    <!-- Include Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h2>COVID-19 Daily Confirmed Cases (Example)</h2>
+    <canvas id="covidChart" width="800" height="400"></canvas>
+
+    <script>
+      // Example COVID data API (replace with your public API or JSON)
+      const apiURL = 'https://api.covidtracking.com/v1/us/daily.json';
+
+      // Fetch the data
+      fetch(apiURL)
+        .then(response => response.json())
+        .then(data => {
+          const labels = [];
+          const cases = [];
+
+          // Parse data: assume data is an array sorted by date
+          data.reverse().forEach(item => {
+            labels.push(item.date);       // e.g., "20201101"
+            cases.push(item.positive);    // confirmed cases
+          });
+
+          const ctx = document.getElementById('covidChart').getContext('2d');
+          new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: labels,
+              datasets: [{
+                label: 'Daily Confirmed Cases',
+                data: cases,
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+              }]
+            },
+            options: {
+              scales: {
+                x: { display: true, title: { display: true, text: 'Date' }},
+                y: { display: true, title: { display: true, text: 'Cases' }}
+              }
+            }
+          });
+        })
+        .catch(err => console.error('Error loading data:', err));
+    </script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+
+{% block title %}Country Selection{% endblock %}
+
+{% block content %}
+<div class="container d-flex justify-content-center py-4">
+
+  <div class="text-center w-100" style="max-width: 420px;">
+    <!--I asked AI to suggeset improved card layout formatting using Bootstrap.
+    My original code is in the comments at the end -->
+    <div class="card shadow">
+      <div class="card-body">
+        <form action="/country" method="get">
+          <div class="mb-3 text-start">
+            <label for="country" class="form-label">Country</label>
+            <select id="country" name="code" class="form-select" required>
+              <option value="" disabled selected>Select a country</option>
+              <!-- Primarily a UK audience so listing UK at the top of the countries list -->
+              <option value="GB">United Kingdom of Great Britain and Northern Ireland</option>
+              <!-- then display all the countries alphabetically -->
+              {% for c in countries %}
+              <option value="{{ c.country_code }}">
+                {{ c.country }}
+              </option>
+              {% endfor %}
+            </select>
+            <div class="form-text">
+              Select a country to view COVID data
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">
+            View Data
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+<!-- Original code before improving formating with Bootstrap
+<h2>Select a Country</h2>
+
+<form action="/country" method="get">
+    <select name="code" required>
+        <option value="" disabled selected>Select a country</option>
+        {% for c in countries %}
+            <option value="{{ c.country_code }}">
+                {{ c.country }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <button type="submit">View Data</button>
+</form>
+-->

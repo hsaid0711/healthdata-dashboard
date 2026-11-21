@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+<!-- Error page if invalid country code -->
+{% block title %}
+    Apology
+{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+    <h1>Error code: {{ top }}</h1>
+    {% if bottom %}
+    <p class="text-muted">{{ bottom }}</p>
+    {% endif %}
+    <a href="{{ url_for('index') }}" class="btn btn-primary mt-3">Go Home</a>
+</div>
+{% endblock %}
